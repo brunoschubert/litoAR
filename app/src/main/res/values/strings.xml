@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">LitoAR</string>
+    <string name="btn_detect_sample">Detect Sample</string>
 </resources>
