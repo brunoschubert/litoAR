@@ -1,4 +1,4 @@
-package com.vizlab.litoAr.DetectSample;
+package com.vizlab.litoAr.DetectSample.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 

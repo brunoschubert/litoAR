@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.vizlab.litoAr.DetectSample.DetectSampleActivity;
+import com.vizlab.litoAr.DetectSample.ui.DetectSampleActivity;
 
 public class MainActivity extends AppCompatActivity {
 
