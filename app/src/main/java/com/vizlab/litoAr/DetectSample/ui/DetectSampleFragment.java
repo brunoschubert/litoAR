@@ -6,6 +6,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,21 +14,31 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.AugmentedImageDatabase;
+import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
+import com.vizlab.litoAr.DetectSample.renderer.AugmentedImageRenderer;
+import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
 import com.vizlab.litoAr.DetectSample.utils.CameraPermissionUtils;
 import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
+import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
 import com.vizlab.litoAr.R;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -36,6 +47,7 @@ import javax.microedition.khronos.opengles.GL10;
  * A simple {@link Fragment} subclass.
  */
 public class DetectSampleFragment extends Fragment implements GLSurfaceView.Renderer{
+    private static final String ERROR_TAG = DetectSampleFragment.class.getSimpleName();
 
     // Creates the Renderers and initialize once the GL surface is created.
     private GLSurfaceView surfaceView;
@@ -46,6 +58,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     // Tracks display rotation.
     private DisplayRotationUtils displayRotationHelper;
+    // Provides the user suggested actions to better track the image.
+    private final TrackingHelperUtils trackingStateHelper = new TrackingHelperUtils(getActivity());
 
     // Sessions provide a mechanism to store user-visible groups of related stream data in a useful
     // and shareable manner, and allows for easy querying of the data in a detailed or
@@ -59,6 +73,9 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     // Augmented image configuration and rendering.
     // Load a single image (true) or a pre-generated image database (false).
     private final boolean useSingleImage = false;
+    // Augmented image and its associated center pose anchor, keyed by index of the augmented image
+    // in the database.
+    private final Map<Integer, Pair<AugmentedImage, Anchor>> augmentedImageMap = new HashMap<>();
 
     public DetectSampleFragment() {
         // Required empty public constructor
@@ -191,7 +208,6 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         }
     }
 
-
     // OPENGL OVERRIDEN METHODS ------------------------------------
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -215,7 +231,111 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        //TODO.
+        // Clear screen to notify driver it should not load any pixels from previous frame.
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+        if (session == null) {
+            return;
+        }
+        // Notify ARCore session that the view size changed so that the perspective matrix and
+        // the video background can be properly adjusted.
+        displayRotationHelper.updateSessionIfNeeded(session);
+
+        try{
+            session.setCameraTextureName(backgroundRenderer.getTextureId());
+
+            // Obtain the current frame from ARSession. When the configuration is set to
+            // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
+            // camera framerate.
+            Frame frame = session.update();
+            Camera camera = frame.getCamera();
+
+            // Keep the screen unlocked while tracking, but allow it to lock when tracking stops.
+            trackingStateHelper.updateKeepScreenOnFlag(camera.getTrackingState());
+
+            // If frame is ready, render camera preview image to the GL surface.
+            backgroundRenderer.draw(frame);
+
+            // Get projection matrix.
+            float[] projmtx = new float[16];
+            camera.getProjectionMatrix(projmtx, 0, 0.1f, 100.0f);
+
+            // Get camera matrix and draw.
+            float[] viewmtx = new float[16];
+            camera.getViewMatrix(viewmtx, 0);
+
+            // Compute lighting from average intensity of the image.
+            final float[] colorCorrectionRgba = new float[4];
+            frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
+
+            // Visualize augmented images.
+            drawAugmentedImages(frame, projmtx, viewmtx, colorCorrectionRgba);
+        } catch (Throwable t) {
+            // Avoid crashing the application due to unhandled exceptions.
+            Log.e(ERROR_TAG, "Exception on the OpenGL thread", t);
+        }
+    }
+    // -------------------------------------------------------------
+    // ARCore METHODS --------------------------------------------
+    private void drawAugmentedImages(
+            Frame frame, float[] projmtx, float[] viewmtx, float[] colorCorrectionRgba){
+        Collection<AugmentedImage> updatedAugmentedImages =
+                frame.getUpdatedTrackables(AugmentedImage.class);
+
+        // Iterate to update augmentedImageMap, remove elements we cannot draw.
+        for (AugmentedImage augmentedImage : updatedAugmentedImages) {
+            switch (augmentedImage.getTrackingState()) {
+                case PAUSED:
+                    // When an image is in PAUSED state, but the camera is not PAUSED, it has been detected,
+                    // but not yet tracked.
+                    String message = String.format("Detected Image %d", augmentedImage.getIndex());
+                    Toast.makeText(getActivity(), message,
+                            Toast.LENGTH_LONG).show();
+                    break;
+
+                case TRACKING:
+                    // Have to switch to UI Thread to update View.
+                    getActivity().runOnUiThread(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    //TODO: Do we need this image view?
+                                    //fitToScanView.setVisibility(View.GONE);
+                                }
+                            });
+
+                    // Create a new anchor for newly found images.
+                    if (!augmentedImageMap.containsKey(augmentedImage.getIndex())) {
+                        Anchor centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.getCenterPose());
+                        augmentedImageMap.put(
+                                augmentedImage.getIndex(), Pair.create(augmentedImage, centerPoseAnchor));
+                    }
+                    break;
+
+                case STOPPED:
+                    augmentedImageMap.remove(augmentedImage.getIndex());
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // Draw all images in augmentedImageMap
+        for (Pair<AugmentedImage, Anchor> pair : augmentedImageMap.values()) {
+            AugmentedImage augmentedImage = pair.first;
+            Anchor centerAnchor = augmentedImageMap.get(augmentedImage.getIndex()).second;
+            switch (augmentedImage.getTrackingState()) {
+                case TRACKING:
+                    augmentedImageRenderer.draw(
+                            viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
     }
     // -------------------------------------------------------------
     // ACTIVITY METHODS --------------------------------------------
