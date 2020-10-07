@@ -208,6 +208,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         }
     }
 
+
+
     // OPENGL OVERRIDEN METHODS ------------------------------------
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {

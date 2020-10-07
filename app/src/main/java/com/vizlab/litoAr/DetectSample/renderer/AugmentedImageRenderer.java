@@ -37,9 +37,9 @@ public class AugmentedImageRenderer {
                 context, "models/green-maze/GreenMaze.obj", "models/frame_base.png");
         mazeRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
 
-        andyRenderer.createOnGlThread(
-                context, "models/andy.obj", "models/andy.png");
-        andyRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//        andyRenderer.createOnGlThread(
+//                context, "models/andy.obj", "models/andy.png");
+//        andyRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
 
 //    imageFrameUpperLeft.createOnGlThread(
 //        context, "models/frame_upper_left.obj", "models/frame_base.png");
@@ -95,13 +95,13 @@ public class AugmentedImageRenderer {
         mazeRenderer.draw(viewMatrix, projectionMatrix, colorCorrectionRgba, tintColor);
 
         // In draw() function, at the end add code to display the Andy, standing on top of the maze
-        Pose andyModelLocalOffset = Pose.makeTranslation(
-                0.0f,
-                0.1f,
-                0.0f);
-        anchorPose.compose(andyModelLocalOffset).toMatrix(modelMatrix, 0);
-        andyRenderer.updateModelMatrixAndy(modelMatrix, 0.05f); // 0.05f is a Magic number to scale
-        andyRenderer.draw(viewMatrix, projectionMatrix, colorCorrectionRgba, tintColor);
+//        Pose andyModelLocalOffset = Pose.makeTranslation(
+//                0.0f,
+//                0.1f,
+//                0.0f);
+//        anchorPose.compose(andyModelLocalOffset).toMatrix(modelMatrix, 0);
+//        andyRenderer.updateModelMatrixAndy(modelMatrix, 0.05f); // 0.05f is a Magic number to scale
+//        andyRenderer.draw(viewMatrix, projectionMatrix, colorCorrectionRgba, tintColor);
 
     }
 
