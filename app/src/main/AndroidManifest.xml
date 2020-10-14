@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vizlab.litoAr">
+
+    <!-- Sceneform requires OpenGLES 3.0 or later. -->
+    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -11,8 +18,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DetectSample.ui.DetectSampleActivity"
-            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".DetectSample.ui.DetectSampleActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">
@@ -22,9 +30,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- "AR Required" app, requires "Google Play Services for AR" (ARCore)
-     to be installed, as the app does not include any non-AR features. -->
-        <meta-data android:name="com.google.ar.core" android:value="required" />
+        <!--
+ "AR Required" app, requires "Google Play Services for AR" (ARCore)
+     to be installed, as the app does not include any non-AR features.
+        -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
     </application>
 
 </manifest>

@@ -9,5 +9,14 @@
         android:id="@+id/detectSampleFragment"
         android:name="com.vizlab.litoAr.DetectSample.ui.DetectSampleFragment"
         android:label="fragment_detect_sample"
-        tools:layout="@layout/fragment_detect_sample" />
+        tools:layout="@layout/fragment_detect_sample" >
+        <action
+            android:id="@+id/action_detectSampleFragment_to_browseFilesFragment"
+            app:destination="@id/browseFilesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/browseFilesFragment"
+        android:name="com.vizlab.litoAr.DetectSample.ui.BrowseFilesFragment"
+        android:label="fragment_browse_files"
+        tools:layout="@layout/fragment_browse_files" />
 </navigation>

@@ -18,25 +18,27 @@ public class AugmentedImageRenderer {
             0x000000, 0xF44336, 0xE91E63, 0x9C27B0, 0x673AB7, 0x3F51B5, 0x2196F3, 0x03A9F4, 0x00BCD4,
             0x009688, 0x4CAF50, 0x8BC34A, 0xCDDC39, 0xFFEB3B, 0xFFC107, 0xFF9800,
     };
-
-    private final ObjectRenderer andyRenderer = new ObjectRenderer();
+//
+    //private final ObjectRenderer andyRenderer = new ObjectRenderer();
 
     private final ObjectRenderer mazeRenderer = new ObjectRenderer();
 
     // Loads the Frame object pieces
-    private final ObjectRenderer imageFrameUpperLeft = new ObjectRenderer();
-    private final ObjectRenderer imageFrameUpperRight = new ObjectRenderer();
-    private final ObjectRenderer imageFrameLowerLeft = new ObjectRenderer();
-    private final ObjectRenderer imageFrameLowerRight = new ObjectRenderer();
+//    private final ObjectRenderer imageFrameUpperLeft = new ObjectRenderer();
+//    private final ObjectRenderer imageFrameUpperRight = new ObjectRenderer();
+//    private final ObjectRenderer imageFrameLowerLeft = new ObjectRenderer();
+//    private final ObjectRenderer imageFrameLowerRight = new ObjectRenderer();
 
     public AugmentedImageRenderer() {}
 
     public void createOnGlThread(Context context) throws IOException {
 
         mazeRenderer.createOnGlThread(
-                context, "models/green-maze/GreenMaze.obj", "models/frame_base.png");
+                context, "models/Teapot.obj", "models/frame_base.png");
+
         mazeRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
 
+        //
 //        andyRenderer.createOnGlThread(
 //                context, "models/andy.obj", "models/andy.png");
 //        andyRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
@@ -69,15 +71,17 @@ public class AugmentedImageRenderer {
             AugmentedImage augmentedImage,
             Anchor centerAnchor,
             float[] colorCorrectionRgba) {
+
         float[] tintColor =
                 convertHexToColor(TINT_COLORS_HEX[augmentedImage.getIndex() % TINT_COLORS_HEX.length]);
 
-        final float maze_edge_size = 492.65f; // Magic number of maze size
+        //final float maze_edge_size = 492.65f; // Magic number of maze size
         final float max_image_edge = Math.max(augmentedImage.getExtentX(), augmentedImage.getExtentZ()); // Get largest detected image edge size
 
         Pose anchorPose = centerAnchor.getPose();
 
-        float mazsScaleFactor = max_image_edge / maze_edge_size; // scale to set Maze to image size
+        //float mazsScaleFactor = max_image_edge / maze_edge_size; // scale to set Maze to image size
+        float mazsScaleFactor = max_image_edge / 5;
         float[] modelMatrix = new float[16];
 
         // OpenGL Matrix operation is in the order: Scale, rotation and Translation
@@ -86,10 +90,12 @@ public class AugmentedImageRenderer {
         // We need to do this adjustment because the maze obj file
         // is not centered around origin. Normally when you
         // work with your own model, you don't have this problem.
+//        Pose mozeModelLocalOffset = Pose.makeTranslation(
+//                -251.3f * mazsScaleFactor,
+//                0.0f,
+//                129.0f * mazsScaleFactor);
         Pose mozeModelLocalOffset = Pose.makeTranslation(
-                -251.3f * mazsScaleFactor,
-                0.0f,
-                129.0f * mazsScaleFactor);
+                0.0f, 0.0f, 0.0f);
         anchorPose.compose(mozeModelLocalOffset).toMatrix(modelMatrix, 0);
         mazeRenderer.updateModelMatrix( modelMatrix, mazsScaleFactor, mazsScaleFactor/10.0f, mazsScaleFactor);
         mazeRenderer.draw(viewMatrix, projectionMatrix, colorCorrectionRgba, tintColor);

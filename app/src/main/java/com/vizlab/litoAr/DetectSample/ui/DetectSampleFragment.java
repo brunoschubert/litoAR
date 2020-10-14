@@ -10,9 +10,12 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
@@ -77,6 +80,10 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     // in the database.
     private final Map<Integer, Pair<AugmentedImage, Anchor>> augmentedImageMap = new HashMap<>();
 
+    View view;
+    ImageView actionBar;
+    Button browseFiles;
+
     public DetectSampleFragment() {
         // Required empty public constructor
     }
@@ -90,7 +97,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_detect_sample, container, false);
+        view = inflater.inflate(R.layout.fragment_detect_sample, container, false);
 
         surfaceView = view.findViewById(R.id.GLSurfaceView);
         displayRotationHelper = new DisplayRotationUtils(getActivity().getApplicationContext());
@@ -105,6 +112,12 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         surfaceView.setWillNotDraw(false);
 
         installRequested = false;
+
+        actionBar = view.findViewById(R.id.lower_action_bar);
+        actionBar.setVisibility(View.GONE);
+
+        browseFiles = view.findViewById(R.id.btn_browse_files);
+        browseFiles.setVisibility(View.GONE);
 
         return view;
     }
@@ -178,7 +191,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
         //TODO: ImageView should be here?
         //fitToScanView.setVisibility(View.VISIBLE);
-
+        actionBar.setVisibility(View.GONE);
+        browseFiles.setVisibility(View.GONE);
     }
 
     @Override
@@ -291,18 +305,29 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                     // When an image is in PAUSED state, but the camera is not PAUSED, it has been detected,
                     // but not yet tracked.
                     String message = String.format("Detected Image %d", augmentedImage.getIndex());
-                    Toast.makeText(getActivity(), message,
-                            Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getActivity(), message,
+//                            Toast.LENGTH_LONG).show();
+                    Log.e("ERRORAR", message);
                     break;
 
                 case TRACKING:
                     // Have to switch to UI Thread to update View.
+                    Log.e("ERRORAR", "DETECTED");
                     getActivity().runOnUiThread(
                             new Runnable() {
                                 @Override
                                 public void run() {
                                     //TODO: Do we need this image view?
                                     //fitToScanView.setVisibility(View.GONE);
+                                    actionBar.setVisibility(View.VISIBLE);
+                                    browseFiles.setOnClickListener(new View.OnClickListener() {
+                                        public void onClick(View v) {
+                                            //TODO: Stop tracking the image once we go through here.
+                                            Log.e("ID", "Augmented ID is: " + augmentedImage.getIndex() + " // Name is: + " + augmentedImage.getName());
+                                            Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, null);
+                                        }
+                                    });
+                                    browseFiles.setVisibility(View.VISIBLE);
                                 }
                             });
 
@@ -316,6 +341,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
                 case STOPPED:
                     augmentedImageMap.remove(augmentedImage.getIndex());
+                    Log.e("ERRORAR", "REMOVED");
                     break;
 
                 default:
@@ -331,6 +357,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                 case TRACKING:
                     augmentedImageRenderer.draw(
                             viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
+                    Log.e("ERRORAR", "DRAW " + augmentedImage.getIndex());
                     break;
 
                 default:
