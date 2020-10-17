@@ -34,7 +34,7 @@ public class AugmentedImageRenderer {
     public void createOnGlThread(Context context) throws IOException {
 
         mazeRenderer.createOnGlThread(
-                context, "models/Teapot.obj", "models/frame_base.png");
+                context, "are/ARE.obj", "are/ARE.jpg");
 
         mazeRenderer.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
 
@@ -94,10 +94,12 @@ public class AugmentedImageRenderer {
 //                -251.3f * mazsScaleFactor,
 //                0.0f,
 //                129.0f * mazsScaleFactor);
-        Pose mozeModelLocalOffset = Pose.makeTranslation(
-                0.0f, 0.0f, 0.0f);
-        anchorPose.compose(mozeModelLocalOffset).toMatrix(modelMatrix, 0);
-        mazeRenderer.updateModelMatrix( modelMatrix, mazsScaleFactor, mazsScaleFactor/10.0f, mazsScaleFactor);
+//        Pose mozeModelLocalOffset = Pose.makeTranslation(
+//                0.0f, 0.0f, 0.0f);
+//        anchorPose.compose(mozeModelLocalOffset).toMatrix(modelMatrix, 0);
+        anchorPose.toMatrix(modelMatrix, 0);
+        //mazeRenderer.updateModelMatrix( modelMatrix, mazsScaleFactor, mazsScaleFactor/10.0f, mazsScaleFactor);
+        mazeRenderer.updateModelMatrix( modelMatrix, 1f, 1f, 1f);
         mazeRenderer.draw(viewMatrix, projectionMatrix, colorCorrectionRgba, tintColor);
 
         // In draw() function, at the end add code to display the Andy, standing on top of the maze

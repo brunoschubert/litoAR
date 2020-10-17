@@ -24,18 +24,13 @@ import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
-import com.vizlab.litoAr.DetectSample.renderer.AugmentedImageRenderer;
-import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
-import com.vizlab.litoAr.DetectSample.utils.CameraPermissionUtils;
-import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
-import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
-import com.vizlab.litoAr.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +40,15 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import com.vizlab.litoAr.DetectSample.renderer.AugmentedImageRenderer;
+import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
+import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAlt;
+import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAltA;
+import com.vizlab.litoAr.DetectSample.utils.CameraPermissionUtils;
+import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
+import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
+import com.vizlab.litoAr.R;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -57,7 +61,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     // Rendering Classes
     private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
-    private final AugmentedImageRenderer augmentedImageRenderer = new AugmentedImageRenderer();
+    //TODO:
+    //private final AugmentedImageRenderer augmentedImageRenderer = new AugmentedImageRenderer();
 
     // Tracks display rotation.
     private DisplayRotationUtils displayRotationHelper;
@@ -83,6 +88,22 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     View view;
     ImageView actionBar;
     Button browseFiles;
+
+    //private static final String sampleAre = "arec/ARE.obj";
+
+    //private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
+    private static final String sampleAre = "Tabanew/ARE.obj";
+
+    //private static final String sampleAre = "are/ARE.obj";
+    // static final String sampleAre = "ara/Amostra_ara.obj";
+    //private static final String sampleAre = "green-maze/GreenMaze.obj";
+    //private static final String sampleAre = "Lexus/lexus_hs.obj";
+
+    //private final ObjectRendererAlt sampleAreRender = new ObjectRendererAlt(sampleAre);
+    private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
+
+    // Temporary matrix allocated here to reduce number of allocations for each frame.
+    private final float[] anchorMatrix = new float[16];
 
     public DetectSampleFragment() {
         // Required empty public constructor
@@ -233,8 +254,12 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         try {
             // Create the texture and pass it to ARCore session to be filled during update().
             backgroundRenderer.createOnGlThread(getActivity().getApplicationContext());
-            augmentedImageRenderer.createOnGlThread(getActivity().getApplicationContext());
+            //augmentedImageRenderer.createOnGlThread(getActivity().getApplicationContext());
+            //TODO: Use AugmentedRender as Interface
+            sampleAreRender.createOnGlThread(getActivity().getApplicationContext());
+            sampleAreRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
         } catch (IOException e) {
+            Log.e("ERROAR", "Failed to read obj file.");
             e.printStackTrace();
         }
     }
@@ -284,8 +309,14 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             final float[] colorCorrectionRgba = new float[4];
             frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
 
+            //TODO: Should this be here
+            // Compute lighting from average intensity of the image.
+            final float lightIntensity = frame.getLightEstimate().getPixelIntensity();
+
             // Visualize augmented images.
-            drawAugmentedImages(frame, projmtx, viewmtx, colorCorrectionRgba);
+            //TODO: Light estimate
+            drawAugmentedImages(frame, projmtx, viewmtx, colorCorrectionRgba, lightIntensity);
+
         } catch (Throwable t) {
             // Avoid crashing the application due to unhandled exceptions.
             Log.e(ERROR_TAG, "Exception on the OpenGL thread", t);
@@ -294,7 +325,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     // -------------------------------------------------------------
     // ARCore METHODS --------------------------------------------
     private void drawAugmentedImages(
-            Frame frame, float[] projmtx, float[] viewmtx, float[] colorCorrectionRgba){
+            Frame frame, float[] projmtx, float[] viewmtx, float[] colorCorrectionRgba, float lightIntensity){
         Collection<AugmentedImage> updatedAugmentedImages =
                 frame.getUpdatedTrackables(AugmentedImage.class);
 
@@ -355,8 +386,29 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             Anchor centerAnchor = augmentedImageMap.get(augmentedImage.getIndex()).second;
             switch (augmentedImage.getTrackingState()) {
                 case TRACKING:
-                    augmentedImageRenderer.draw(
-                            viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
+                    //TODO: Check matrix
+//                    final float max_image_edge = Math.max(augmentedImage.getExtentX(), augmentedImage.getExtentZ());
+//                    final float maze_edge_size = 492.65f;
+//                    Pose anchorPose = centerAnchor.getPose();
+//                    float mazsScaleFactor = max_image_edge / maze_edge_size;
+//                    Pose mozeModelLocalOffset = Pose.makeTranslation(
+//                            -251.3f * mazsScaleFactor,
+//                            0.0f,
+//                            129.0f * mazsScaleFactor);
+//                    anchorPose.compose(mozeModelLocalOffset).toMatrix(anchorMatrix, 0);
+//                    sampleAreRender.updateModelMatrix(anchorMatrix, 10f);
+//                    sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+
+
+//                    Pose anchorPose = centerAnchor.getPose();
+//                    anchorPose.toMatrix(anchorMatrix, 0);
+
+                    centerAnchor.getPose().toMatrix(anchorMatrix, 0);
+                    sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
+                    sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+                    //TODO: EndOf
+//                    augmentedImageRenderer.draw(
+//                            viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
                     Log.e("ERRORAR", "DRAW " + augmentedImage.getIndex());
                     break;
 
