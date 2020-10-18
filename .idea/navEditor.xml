@@ -13,8 +13,8 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="438" />
-                            <option name="y" value="50" />
+                            <option name="x" value="617" />
+                            <option name="y" value="41" />
                           </Point>
                         </option>
                       </LayoutPositions>
@@ -25,13 +25,34 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="50" />
-                            <option name="y" value="50" />
+                            <option name="x" value="256" />
+                            <option name="y" value="40" />
                           </Point>
                         </option>
                         <option name="myPositions">
                           <map>
                             <entry key="action_detectSampleFragment_to_browseFilesFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="detectSamplePermissionsFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="-114" />
+                            <option name="y" value="40" />
+                          </Point>
+                        </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_detectSamplePermissionsFragment_to_detectSampleFragment2">
                               <value>
                                 <LayoutPositions />
                               </value>

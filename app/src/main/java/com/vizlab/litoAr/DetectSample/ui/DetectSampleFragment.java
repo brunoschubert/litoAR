@@ -50,6 +50,12 @@ import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
 import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
 import com.vizlab.litoAr.R;
 
+//TODO: CODE CLEAN-UP
+// AugmentedImageRender
+// ObjectRender
+// ObkectRenderAlt
+// - BGRender - ShaderLoader: stays as-is
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -103,6 +109,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     //private final ObjectRendererAlt sampleAreRender = new ObjectRendererAlt(sampleAre);
     private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
     private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
+
+    private final DetectSamplePermissionsFragment permissionsFragment = new DetectSamplePermissionsFragment();
 
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
@@ -164,10 +172,10 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
                 // ARCore requires camera permissions to operate. If we did not yet obtain runtime
                 // permission on Android M and above, now is a good time to ask the user for it.
-                if (!CameraPermissionUtils.hasCameraPermission(getActivity())) {
-                    CameraPermissionUtils.requestCameraPermission(getActivity());
-                    return;
-                }
+//                if (!CameraPermissionUtils.hasCameraPermission(getActivity())) {
+//                    CameraPermissionUtils.requestCameraPermission(getActivity());
+//                    return;
+//                }
 
                 session = new Session(getActivity().getApplicationContext());
 
@@ -232,19 +240,19 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-        super.onRequestPermissionsResult(requestCode, permissions, results);
-        if (!CameraPermissionUtils.hasCameraPermission(getActivity())) {
-            Toast.makeText(getActivity(), "Camera permissions are needed to run this application",
-                    Toast.LENGTH_LONG).show();
-            if (!CameraPermissionUtils.shouldShowRequestPermissionRationale(getActivity())) {
-                // Permission denied with checking "Do not ask again".
-                CameraPermissionUtils.launchPermissionSettings(getActivity());
-            }
-            getActivity().finish();
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+//        super.onRequestPermissionsResult(requestCode, permissions, results);
+//        if (!CameraPermissionUtils.hasCameraPermission(getActivity())) {
+//            Toast.makeText(getActivity(), "Camera permissions are needed to run this application",
+//                    Toast.LENGTH_LONG).show();
+//            if (!CameraPermissionUtils.shouldShowRequestPermissionRationale(getActivity())) {
+//                // Permission denied with checking "Do not ask again".
+//                CameraPermissionUtils.launchPermissionSettings(getActivity());
+//            }
+//            getActivity().finish();
+//        }
+//    }
 
 
 
