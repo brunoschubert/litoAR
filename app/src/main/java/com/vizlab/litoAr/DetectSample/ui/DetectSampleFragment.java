@@ -80,7 +80,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     // Augmented image configuration and rendering.
     // Load a single image (true) or a pre-generated image database (false).
-    private final boolean useSingleImage = false;
+    // TODO: This loads the image database
+    private final boolean useSingleImage = true;
     // Augmented image and its associated center pose anchor, keyed by index of the augmented image
     // in the database.
     private final Map<Integer, Pair<AugmentedImage, Anchor>> augmentedImageMap = new HashMap<>();
@@ -91,8 +92,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     //private static final String sampleAre = "arec/ARE.obj";
 
-    //private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
-    private static final String sampleAre = "Tabanew/ARE.obj";
+    private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
+    private static final String sampleCarb = "Tabanew/ARE.obj";
 
     //private static final String sampleAre = "are/ARE.obj";
     // static final String sampleAre = "ara/Amostra_ara.obj";
@@ -101,6 +102,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     //private final ObjectRendererAlt sampleAreRender = new ObjectRendererAlt(sampleAre);
     private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
+    private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
+
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
     private final float[] anchorMatrix = new float[16];
@@ -256,6 +259,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             backgroundRenderer.createOnGlThread(getActivity().getApplicationContext());
             //augmentedImageRenderer.createOnGlThread(getActivity().getApplicationContext());
             //TODO: Use AugmentedRender as Interface
+            sampleCarbRender.createOnGlThread(getActivity().getApplicationContext());
+            sampleCarbRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
             sampleAreRender.createOnGlThread(getActivity().getApplicationContext());
             sampleAreRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
         } catch (IOException e) {
@@ -353,7 +358,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                                     actionBar.setVisibility(View.VISIBLE);
                                     browseFiles.setOnClickListener(new View.OnClickListener() {
                                         public void onClick(View v) {
-                                            //TODO: Stop tracking the image once we go through here.
+                                            //TODO: Show the Image name being Tracked on the UI
+                                            // So that we know what to Load.
                                             Log.e("ID", "Augmented ID is: " + augmentedImage.getIndex() + " // Name is: + " + augmentedImage.getName());
                                             Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, null);
                                         }
@@ -404,8 +410,14 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    anchorPose.toMatrix(anchorMatrix, 0);
 
                     centerAnchor.getPose().toMatrix(anchorMatrix, 0);
-                    sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
-                    sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+                    if(augmentedImage.getIndex() == 0) {
+                        sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
+                        sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+                    }
+                    if(augmentedImage.getIndex() == 1) {
+                        sampleCarbRender.updateModelMatrix(anchorMatrix, 1f);
+                        sampleCarbRender.draw(viewmtx, projmtx, lightIntensity);
+                    }
                     //TODO: EndOf
 //                    augmentedImageRenderer.draw(
 //                            viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
@@ -448,6 +460,13 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
             augmentedImageDatabase = new AugmentedImageDatabase(session);
             augmentedImageDatabase.addImage("image_name", augmentedImageBitmap);
+
+            //TODO: ADD THE SECOND
+            augmentedImageBitmap = loadSecondAugmentedImageBitmap();
+            if (augmentedImageBitmap == null) {
+                return false;
+            }
+            augmentedImageDatabase.addImage("image_qr2", augmentedImageBitmap);
             // If the physical size of the image is known, you can instead use:
             //     augmentedImageDatabase.addImage("image_name", augmentedImageBitmap, widthInMeters);
             // This will improve the initial detection speed. ARCore will still actively estimate the
@@ -469,7 +488,21 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     }
 
     private Bitmap loadAugmentedImageBitmap() {
-        try (InputStream is = getActivity().getAssets().open("default.jpg")) {
+        // TODO: CRITICAL - Once you pass the BITMAP you also pass the Model.
+        // CREATE THE RENDERS CLASSES FOR EACH MODEL
+        // ADD INDEX TO RENDER CLASSES
+        // RENDER INDEX EQUALS THE AUGMENTED IMAGE INDEX INSIDE THE DB
+        try (InputStream is = getActivity().getAssets().open("qr1.png")) {
+            return BitmapFactory.decodeStream(is);
+        } catch (IOException e) {
+            Toast.makeText(getActivity(), "Could not setup augmented image database",
+                    Toast.LENGTH_LONG).show();
+        }
+        return null;
+    }
+
+    private Bitmap loadSecondAugmentedImageBitmap() {
+        try (InputStream is = getActivity().getAssets().open("qr2.png")) {
             return BitmapFactory.decodeStream(is);
         } catch (IOException e) {
             Toast.makeText(getActivity(), "Could not setup augmented image database",
