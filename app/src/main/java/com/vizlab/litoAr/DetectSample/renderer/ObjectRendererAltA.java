@@ -14,6 +14,7 @@ package com.vizlab.litoAr.DetectSample.renderer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,8 +24,11 @@ import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -71,7 +75,7 @@ public class ObjectRendererAltA {
     private static final int COORDS_PER_VERTEX = 3;
 
     // Note: the last component must be zero to avoid applying the translational part of the matrix.
-    private static final float[] LIGHT_DIRECTION = new float[] { 0.0f, 1.0f, 0.0f, 0.0f };
+    private static final float[] LIGHT_DIRECTION = new float[]{0.0f, 1.0f, 0.0f, 0.0f};
     private float[] mViewLightDirection = new float[4];
 
     // Object vertex buffer variables.
@@ -119,20 +123,33 @@ public class ObjectRendererAltA {
     private float mSpecularPower = 6.0f;
 
     private final String OBJ_PATH;
+    private int id;
+    private String parentPath;
+
+    public ObjectRendererAltA(String objPath, String parentPath, int id) {
+        OBJ_PATH = objPath;
+        this.id = id;
+        this.parentPath = parentPath;
+    }
 
     public ObjectRendererAltA(String objPath) {
         OBJ_PATH = objPath;
     }
 
+    public String getParentPath() {
+        return this.parentPath;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
     /**
      * Creates and initializes OpenGL resources needed for rendering the model.
      *
-     * @param context
-     *         Context for loading the shader and below-named model and texture assets.
-     * @param objAssetName
-     *         Name of the OBJ file containing the model geometry.
-     * @param diffuseTextureAssetName
-     *         Name of the PNG file containing the diffuse texture map.
+     * @param context                 Context for loading the shader and below-named model and texture assets.
+     * @param objAssetName            Name of the OBJ file containing the model geometry.
+     * @param diffuseTextureAssetName Name of the PNG file containing the diffuse texture map.
      */
     public void createOnGlThread(Context context, String objAssetName,
                                  String diffuseTextureAssetName) throws IOException {
@@ -249,15 +266,22 @@ public class ObjectRendererAltA {
     /**
      * Creates and initializes OpenGL resources needed for rendering the model.
      *
-     * @param context
-     *         Context for loading the shader and below-named model and texture assets.
+     * @param context Context for loading the shader and below-named model and texture assets.
      */
     public void createOnGlThread(Context context
     ) throws IOException {
 
-        String parentDirectory = OBJ_PATH.split("/")[0] + "/";
+        //TODO
+        //String parentDirectory = OBJ_PATH.split("/")[0] + "/";
+        String parentDirectory = this.parentPath;
+
         // Read the obj file.
-        InputStream objInputStream = context.getAssets().open(OBJ_PATH);
+        //TODO
+        //InputStream objInputStream = context.getAssets().open(OBJ_PATH);
+        File obj = new File(this.OBJ_PATH);
+        Log.e("PACK", "Render - from const: " + this.OBJ_PATH);
+        Log.e("PACK", "Render - from File: " + obj.getPath());
+        InputStream objInputStream = new FileInputStream(obj);
         mObj = ObjReader.read(objInputStream);
 
         if (mObj.getNumMaterialGroups() == 0 && mObj.getMtlFileNames().size() == 0) {
@@ -265,6 +289,7 @@ public class ObjectRendererAltA {
             return;
         }
 
+        Log.e("PACK", "Render - from Read OBJ - " + "MTLNumber: " + mObj.getNumMaterialGroups() + " MTLName: " + mObj.getMtlFileNames());
         // Prepare the Obj so that its structure is suitable for
         // rendering with OpenGL:
         // 1. Triangulate it
@@ -302,8 +327,15 @@ public class ObjectRendererAltA {
 
             //Load texture
             if (!mObj.getMtlFileNames().isEmpty()) {
-                List<Mtl> mtlList = MtlReader.read(
-                        context.getAssets().open(parentDirectory + mObj.getMtlFileNames().get(0)));
+                //TODO
+//                List<Mtl> mtlList = MtlReader.read(
+//                        context.getAssets().open(parentDirectory + mObj.getMtlFileNames().get(0)));
+                File mtlFile = new File(parentDirectory + mObj.getMtlFileNames().get(0));
+                Log.e("PACK", "Render - Load TML: " + mtlFile.getPath());
+                InputStream mltInputStream = new FileInputStream(mtlFile);
+                List<Mtl> mtlList = MtlReader.read(mltInputStream);
+                Log.e("PACK", "Render - MTL List: " + mtlList.get(0).getMapKd());
+
                 Mtl targetMat = null;
                 for (Mtl mat : mtlList) {
                     if (currentMatGroup.getName().equals(mat.getName())) {
@@ -322,8 +354,13 @@ public class ObjectRendererAltA {
                     if (targetMat.getMapKd().contains("tga")) {
                         textureBitmap = readTgaToBitmap(context, parentDirectory + targetMat.getMapKd());
                     } else {
-                        textureBitmap = BitmapFactory.decodeStream(
-                                context.getAssets().open(parentDirectory + targetMat.getMapKd()));
+                        //TODO:
+//                        textureBitmap = BitmapFactory.decodeStream(File texture = new File(parentDirectory + targetMat.getMapKd());
+//                                context.getAssets().open(parentDirectory + targetMat.getMapKd()));
+                        File texture = new File(parentDirectory + targetMat.getMapKd());
+                        InputStream textureInputStream = new FileInputStream(texture);
+                        textureBitmap = BitmapFactory.decodeStream(textureInputStream);
+                        Log.e("PACK", "Render - Texture Path: " + texture.getPath());
                     }
 
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures[i]);
@@ -440,8 +477,7 @@ public class ObjectRendererAltA {
     /**
      * Selects the blending mode for rendering.
      *
-     * @param blendMode
-     *         The blending mode.  Null indicates no blending (opaque rendering).
+     * @param blendMode The blending mode.  Null indicates no blending (opaque rendering).
      */
 
     public void setBlendMode(BlendMode blendMode) {
@@ -451,11 +487,8 @@ public class ObjectRendererAltA {
     /**
      * Updates the object model matrix and applies scaling.
      *
-     * @param modelMatrix
-     *         A 4x4 model-to-world transformation matrix, stored in column-major order.
-     * @param scaleFactor
-     *         A separate scaling factor to apply before the {@code modelMatrix}.
-     *
+     * @param modelMatrix A 4x4 model-to-world transformation matrix, stored in column-major order.
+     * @param scaleFactor A separate scaling factor to apply before the {@code modelMatrix}.
      * @see android.opengl.Matrix
      */
     public void updateModelMatrix(float[] modelMatrix, float scaleFactor) {
@@ -470,15 +503,11 @@ public class ObjectRendererAltA {
     /**
      * Sets the surface characteristics of the rendered model.
      *
-     * @param ambient
-     *         Intensity of non-directional surface illumination.
-     * @param diffuse
-     *         Diffuse (matte) surface reflectivity.
-     * @param specular
-     *         Specular (shiny) surface reflectivity.
-     * @param specularPower
-     *         Surface shininess.  Larger values result in a smaller, sharper
-     *         specular highlight.
+     * @param ambient       Intensity of non-directional surface illumination.
+     * @param diffuse       Diffuse (matte) surface reflectivity.
+     * @param specular      Specular (shiny) surface reflectivity.
+     * @param specularPower Surface shininess.  Larger values result in a smaller, sharper
+     *                      specular highlight.
      */
     public void setMaterialProperties(
             float ambient, float diffuse, float specular, float specularPower) {
@@ -491,14 +520,10 @@ public class ObjectRendererAltA {
     /**
      * Draws the model.
      *
-     * @param cameraView
-     *         A 4x4 view matrix, in column-major order.
-     * @param cameraPerspective
-     *         A 4x4 projection matrix, in column-major order.
-     * @param lightIntensity
-     *         Illumination intensity.  Combined with diffuse and specular material
-     *         properties.
-     *
+     * @param cameraView        A 4x4 view matrix, in column-major order.
+     * @param cameraPerspective A 4x4 projection matrix, in column-major order.
+     * @param lightIntensity    Illumination intensity.  Combined with diffuse and specular material
+     *                          properties.
      * @see #setBlendMode(BlendMode)
      * @see #updateModelMatrix(float[], float)
      * @see #setMaterialProperties(float, float, float, float)
@@ -506,6 +531,7 @@ public class ObjectRendererAltA {
      */
     public void draw(float[] cameraView, float[] cameraPerspective, float lightIntensity) {
 
+        Log.e("PACK", "Render - onDraw: " + mObj.getNumMaterialGroups());
         ShaderUtil.checkGLError(TAG, "Before draw");
 
         // Build the ModelView and ModelViewProjection matrices
@@ -546,8 +572,10 @@ public class ObjectRendererAltA {
             }
         }
 
+        Log.e("PACK", "Render - Draw - Before loop: " + mObj.getNumMaterialGroups());
         //Start drawing data from each VAO
         for (int i = 0; i < mObj.getNumMaterialGroups(); i++) {
+            Log.e("PACK", "Render - Draw - Inside loop: " + mObj.getNumMaterialGroups());
             // Attach the object texture.
             GLES20.glUniform1i(mTextureUniform, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures[i]);
@@ -583,7 +611,11 @@ public class ObjectRendererAltA {
     }
 
     private Bitmap readTgaToBitmap(Context context, String path) throws IOException {
-        InputStream is = context.getAssets().open(path);
+        Log.e("PACK", "TGA: " + path);
+        File texture = new File(path);
+        InputStream is = new FileInputStream(texture);
+        //TODO
+        //InputStream is = context.getAssets().open(path);
         byte[] buffer = new byte[is.available()];
         is.read(buffer);
         is.close();

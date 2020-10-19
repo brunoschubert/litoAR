@@ -14,9 +14,9 @@ import com.vizlab.litoAr.R;
  * A simple {@link Fragment} subclass.
  * create an instance of this fragment.
  */
-public class BrowseFilesFragment extends Fragment {
+public class DummyFragment extends Fragment {
 
-    public BrowseFilesFragment() {
+    public DummyFragment() {
         // Required empty public constructor
     }
 
@@ -24,7 +24,7 @@ public class BrowseFilesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_browse_files, container, false);
+        View view = inflater.inflate(R.layout.fragment_dummy, container, false);
 
 
         return view;

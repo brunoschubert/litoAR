@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/detect_sample_nav"
-    app:startDestination="@id/detectSampleFragment">
+    app:startDestination="@id/detectSamplePermissionsFragment">
 
     <fragment
         android:id="@+id/detectSampleFragment"
@@ -13,10 +13,26 @@
         <action
             android:id="@+id/action_detectSampleFragment_to_browseFilesFragment"
             app:destination="@id/browseFilesFragment" />
+        <action
+            android:id="@+id/action_detectSampleFragment_to_dummyFragment"
+            app:destination="@id/dummyFragment" />
     </fragment>
     <fragment
         android:id="@+id/browseFilesFragment"
         android:name="com.vizlab.litoAr.DetectSample.ui.BrowseFilesFragment"
         android:label="fragment_browse_files"
         tools:layout="@layout/fragment_browse_files" />
+    <fragment
+        android:id="@+id/detectSamplePermissionsFragment"
+        android:name="com.vizlab.litoAr.DetectSample.ui.DetectSamplePermissionsFragment"
+        android:label="fragment_detec_sample_permissions"
+        tools:layout="@layout/fragment_detect_sample_permissions" >
+        <action
+            android:id="@+id/action_detectSamplePermissionsFragment_to_detectSampleFragment"
+            app:destination="@id/detectSampleFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/dummyFragment"
+        android:name="com.vizlab.litoAr.DetectSample.ui.DummyFragment"
+        android:label="DummyFragment" />
 </navigation>
