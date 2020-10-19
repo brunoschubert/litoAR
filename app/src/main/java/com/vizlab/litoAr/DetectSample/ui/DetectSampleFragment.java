@@ -35,6 +35,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -106,20 +107,24 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     Button browseFiles;
     TextView detectedImage;
 
+    int dirSize;
+    ArrayList<String> tagNames = new ArrayList<>();
+    ArrayList<String> tagPaths = new ArrayList<>();
+    ArrayList<String> modelPaths = new ArrayList<>();
+    ArrayList<String> modelParentPaths = new ArrayList<>();
+    ArrayList<ObjectRendererAltA> renderableObjects = new ArrayList<>();
+
     //private static final String sampleAre = "arec/ARE.obj";
-    private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
-    private static final String sampleCarb = "Tabanew/ARE.obj";
+//    private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
+//    private static final String sampleCarb = "Tabanew/ARE.obj";
     //private static final String sampleAre = "are/ARE.obj";
     // static final String sampleAre = "ara/Amostra_ara.obj";
     //private static final String sampleAre = "green-maze/GreenMaze.obj";
     //private static final String sampleAre = "Lexus/lexus_hs.obj";
 
     //private final ObjectRendererAlt sampleAreRender = new ObjectRendererAlt(sampleAre);
-    private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
-    private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
-
-    //TODO: CHECK THIS.
-    private ArrayList<ObjectRendererAltA> objectRender;
+//    private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
+//    private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
     private final float[] anchorMatrix = new float[16];
@@ -274,10 +279,39 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             backgroundRenderer.createOnGlThread(getActivity().getApplicationContext());
             //augmentedImageRenderer.createOnGlThread(getActivity().getApplicationContext());
             //TODO: Use AugmentedRender as Interface
-            sampleCarbRender.createOnGlThread(getActivity().getApplicationContext());
-            sampleCarbRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
-            sampleAreRender.createOnGlThread(getActivity().getApplicationContext());
-            sampleAreRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//            sampleCarbRender.createOnGlThread(getActivity().getApplicationContext());
+//            sampleCarbRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//            sampleAreRender.createOnGlThread(getActivity().getApplicationContext());
+//            sampleAreRender.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+
+            for (int i = 0; i < renderableObjects.size(); i++) {
+                Log.e("PACK", "Rendering Object - Before " + renderableObjects.get(i).getId());
+                renderableObjects.get(i).createOnGlThread(getActivity().getApplicationContext());
+                Log.e("PACK", "Rendering Object - OnThread " + renderableObjects.get(i).getId());
+                renderableObjects.get(i).setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+                Log.e("PACK", "Rendering Object - OnMaterials " + renderableObjects.get(i).getId());
+            }
+
+
+//            Log.e("PACK", "Rendering Object - Before " + renderableObjects.get(0).getId());
+//            renderableObjects.get(0).createOnGlThread(getActivity().getApplicationContext());
+//            Log.e("PACK", "Rendering Object - OnThread " + renderableObjects.get(0).getId());
+//            renderableObjects.get(0).setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//            Log.e("PACK", "Rendering Object - OnMaterials " + renderableObjects.get(0).getId());
+//
+//            Log.e("PACK", "Rendering Object - Before " + renderableObjects.get(1).getId());
+//            renderableObjects.get(1).createOnGlThread(getActivity().getApplicationContext());
+//            Log.e("PACK", "Rendering Object - OnThread " + renderableObjects.get(1).getId());
+//            renderableObjects.get(1).setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//            Log.e("PACK", "Rendering Object - OnMaterials " + renderableObjects.get(1).getId());
+//
+//            Log.e("PACK", "Rendering Object - Before " + renderableObjects.get(2).getId());
+//            renderableObjects.get(2).createOnGlThread(getActivity().getApplicationContext());
+//            Log.e("PACK", "Rendering Object - OnThread " + renderableObjects.get(2).getId());
+//            renderableObjects.get(2).setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+//            Log.e("PACK", "Rendering Object - OnMaterials " + renderableObjects.get(2).getId());
+
+
         } catch (IOException e) {
             Log.e("ERROAR", "Failed to read obj file.");
             e.printStackTrace();
@@ -478,14 +512,25 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
                     centerAnchor.getPose().toMatrix(anchorMatrix, 0);
                     // TODO: if augmentedIndex EQUALS objectRendererIndex
-                    if (augmentedImage.getIndex() == 0) {
-                        sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
-                        sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+//                    if (augmentedImage.getIndex() == 0) {
+//                        sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
+//                        sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
+//                    }
+//                    if (augmentedImage.getIndex() == 1) {
+//                        sampleCarbRender.updateModelMatrix(anchorMatrix, 1f);
+//                        sampleCarbRender.draw(viewmtx, projmtx, lightIntensity);
+//                    }
+
+                    for (int i = 0; i < renderableObjects.size(); i++) {
+                        if (renderableObjects.get(i).getId() == augmentedImage.getIndex()) {
+                            Log.e("PACK", "onDrawLoop AR id: " + augmentedImage.getIndex());
+                            renderableObjects.get(i).updateModelMatrix(anchorMatrix, 1f);
+                            Log.e("PACK", "onDrawLoop After update: " + augmentedImage.getIndex());
+                            renderableObjects.get(i).draw(viewmtx, projmtx, lightIntensity);
+                            Log.e("PACK", "onDrawLoop After Draw: " + augmentedImage.getIndex());
+                        }
                     }
-                    if (augmentedImage.getIndex() == 1) {
-                        sampleCarbRender.updateModelMatrix(anchorMatrix, 1f);
-                        sampleCarbRender.draw(viewmtx, projmtx, lightIntensity);
-                    }
+
                     //TODO: EndOf
 //                    augmentedImageRenderer.draw(
 //                            viewmtx, projmtx, augmentedImage, centerAnchor, colorCorrectionRgba);
@@ -505,6 +550,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         Config config = new Config(session);
         //TODO: We create a FOLDER instead.
         readPackage();
+        Log.e("PACK", "After Read Package!");
         config.setFocusMode(Config.FocusMode.AUTO);
         if (!setupAugmentedImageDatabase(config)) {
             Toast.makeText(getActivity(), "Could not setup augmented image database",
@@ -545,15 +591,22 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                             String objPath = packageDir[i].getPath() + modelObject.get("modelFile").toString();
                             String objParentDir = packageDir[i].getPath() + "/model/";
 
-                            String arTAGName = samplePackage.get("sampleTAG").toString();
-                            String arTAGPath = packageDir[i].getPath() + samplePackage.get("sampleTAG").toString();
+                            String tagName = samplePackage.get("sampleTAG").toString();
+                            String tagPath = packageDir[i].getPath() + "/" + samplePackage.get("sampleTAG").toString();
 
-                            //TODO: RENDER
-                            // id - Path - ParentPath
                             //TODO: IMGDB
                             // name - Path
+                            tagNames.add(tagName);
+                            tagPaths.add(tagPath);
 
-                            int DirSize = packageDir.length;
+                            dirSize = packageDir.length;
+                            //TODO: RENDER
+                            // id - Path - ParentPath
+                            modelPaths.add(objPath);
+                            modelParentPaths.add(objParentDir);
+                            Log.e("PACK", "Read Package!");
+
+
                         } catch (JSONException e) {
                             //TODO: Welp
                             return false;
@@ -586,12 +639,6 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
         JSONObject jsonObject = new JSONObject(jsonString);
 
-        //Log.e("JSON", jsonObject.get("name").toString());
-
-        // TODO: Get nested properties
-//        JSONObject childObject = (JSONObject) jsonObject.get("model");
-//        Log.e("JSON", childObject.get("modelFile").toString());
-
         return jsonObject;
     }
 
@@ -605,21 +652,41 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         // * shorter setup time
         // * doesn't require images to be packaged in apk.
         if (useSingleImage) {
-            // LOAD FIRST
-            Bitmap augmentedImageBitmap = loadAugmentedImageBitmap();
-            if (augmentedImageBitmap == null) {
-                return false;
-            }
-
             augmentedImageDatabase = new AugmentedImageDatabase(session);
 
-            augmentedImageDatabase.addImage("image_name", augmentedImageBitmap);
-            //TODO: ADD THE SECOND
-            augmentedImageBitmap = loadSecondAugmentedImageBitmap();
-            if (augmentedImageBitmap == null) {
-                return false;
+            Bitmap augmentedImageBitmap;
+            ObjectRendererAltA sampleRenderer;
+            for (int i = 0; i < dirSize; ++i) {
+                augmentedImageBitmap = loadAugmentedImageBitmap(tagPaths.get(i));
+                if (augmentedImageBitmap == null) {
+                    return false;
+                }
+                String tagName = tagNames.get(i).substring(0, tagNames.get(i).lastIndexOf('.'));
+                augmentedImageDatabase.addImage(tagName, augmentedImageBitmap);
+
+                sampleRenderer = new ObjectRendererAltA(modelPaths.get(i), modelParentPaths.get(i), i);
+
+                Log.e("PACK", "Setup DB - First Path: " + modelPaths.get(i));
+                renderableObjects.add(sampleRenderer);
+                Log.e("PACK", "Renderable Objects size is:" + renderableObjects.size());
             }
-            augmentedImageDatabase.addImage("image_qr2", augmentedImageBitmap);
+            Log.e("PACK", "After Renderable Objects size is:" + renderableObjects.size());
+
+
+//            // LOAD FIRST
+//            // Bitmap augmentedImageBitmap = loadAugmentedImageBitmap();
+//            augmentedImageBitmap = loadAugmentedImageBitmap();
+//            if (augmentedImageBitmap == null) {
+//                return false;
+//            }
+//
+//            augmentedImageDatabase.addImage("image_name", augmentedImageBitmap);
+//            //TODO: ADD THE SECOND
+//            augmentedImageBitmap = loadSecondAugmentedImageBitmap();
+//            if (augmentedImageBitmap == null) {
+//                return false;
+//            }
+//            augmentedImageDatabase.addImage("image_qr2", augmentedImageBitmap);
             // If the physical size of the image is known, you can instead use:
             //     augmentedImageDatabase.addImage("image_name", augmentedImageBitmap, widthInMeters);
             // This will improve the initial detection speed. ARCore will still actively estimate the
@@ -638,6 +705,17 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
         config.setAugmentedImageDatabase(augmentedImageDatabase);
         return true;
+    }
+
+    private Bitmap loadAugmentedImageBitmap(String tagPath) {
+        File tag = new File(tagPath);
+        try (InputStream is = new FileInputStream(tag)) {
+            return BitmapFactory.decodeStream(is);
+        } catch (IOException e) {
+            Toast.makeText(getActivity(), "Could not setup augmented image database",
+                    Toast.LENGTH_LONG).show();
+        }
+        return null;
     }
 
     private Bitmap loadAugmentedImageBitmap() {
