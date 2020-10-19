@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -25,7 +26,6 @@ import com.google.ar.core.AugmentedImageDatabase;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
-import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
@@ -33,8 +33,13 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,14 +47,14 @@ import java.util.Map;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.vizlab.litoAr.DetectSample.renderer.AugmentedImageRenderer;
 import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
-import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAlt;
 import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAltA;
-import com.vizlab.litoAr.DetectSample.utils.CameraPermissionUtils;
 import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
 import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
 import com.vizlab.litoAr.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 //TODO: CODE CLEAN-UP
 // AugmentedImageRender
@@ -62,6 +67,9 @@ import com.vizlab.litoAr.R;
  */
 public class DetectSampleFragment extends Fragment implements GLSurfaceView.Renderer {
     private static final String ERROR_TAG = DetectSampleFragment.class.getSimpleName();
+
+    // Arbitrary constant used to unsure that we have permissions.
+    private static final int READ_EXTERNAL_STORAGE_PERMISSION_CODE = 11;
 
     // Creates the Renderers and initialize once the GL surface is created.
     private GLSurfaceView surfaceView;
@@ -97,14 +105,10 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     ImageView actionBar;
     Button browseFiles;
     TextView detectedImage;
-    int track;
-    int paus;
 
     //private static final String sampleAre = "arec/ARE.obj";
-
     private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
     private static final String sampleCarb = "Tabanew/ARE.obj";
-
     //private static final String sampleAre = "are/ARE.obj";
     // static final String sampleAre = "ara/Amostra_ara.obj";
     //private static final String sampleAre = "green-maze/GreenMaze.obj";
@@ -114,15 +118,11 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
     private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
 
-    private final DetectSamplePermissionsFragment permissionsFragment = new DetectSamplePermissionsFragment();
-
+    //TODO: CHECK THIS.
+    private ArrayList<ObjectRendererAltA> objectRender;
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
     private final float[] anchorMatrix = new float[16];
-
-    public DetectSampleFragment() {
-        // Required empty public constructor
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -410,7 +410,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                             });
 
                     // Create a new anchor for newly found images.
-                    if(augmentedImageMap.isEmpty()){
+                    if (augmentedImageMap.isEmpty()) {
                         // Add a new trackeable Anchor.
                         Anchor centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.getCenterPose());
                         augmentedImageMap.put(
@@ -421,8 +421,9 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                         // TODO: Check if this method won't work as comparison to get the Element on Screen
                         // thus tracking more at once.
                         Integer indexToRemove = (Integer) augmentedImageMap.keySet().toArray()[0];
-                        Anchor anchorToRemove =  augmentedImageMap.get(indexToRemove).second;
+                        Anchor anchorToRemove = augmentedImageMap.get(indexToRemove).second;
                         // TODO: By detaching the Anchor is now STOPPED. How to retrack it?
+                        // Would it work by checking the devicePose against the Anchor?
                         anchorToRemove.detach();
                         augmentedImageMap.clear();
 
@@ -467,13 +468,13 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    anchorPose.toMatrix(anchorMatrix, 0);
 
                     getActivity().runOnUiThread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                detectedImage.setVisibility(View.VISIBLE);
-                                detectedImage.setText("Detected: " + augmentedImage.getIndex());
-                            }
-                        });
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    detectedImage.setVisibility(View.VISIBLE);
+                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
+                                }
+                            });
 
                     centerAnchor.getPose().toMatrix(anchorMatrix, 0);
                     // TODO: if augmentedIndex EQUALS objectRendererIndex
@@ -502,12 +503,96 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     private void configureSession() {
         Config config = new Config(session);
+        //TODO: We create a FOLDER instead.
+        readPackage();
         config.setFocusMode(Config.FocusMode.AUTO);
         if (!setupAugmentedImageDatabase(config)) {
             Toast.makeText(getActivity(), "Could not setup augmented image database",
                     Toast.LENGTH_LONG).show();
         }
         session.configure(config);
+    }
+
+    private boolean readPackage() {
+        //TODO: OBJ RENDER MTL TAKES: "E/OBJPATH: Carbonatonew/"
+        // OBJ RENDER COULD TAKE OBJ PATH + MTL PATH
+        //public ObjectRendererAltA(String objPath, String Parent dir) {
+        //        OBJ_PATH = objPath;
+        //    }
+
+        // Creates LitoAPP packages folder.
+        File packageFolder = null;
+        // Checks public storage availability.
+        String storageState = Environment.getExternalStorageState();
+        if (storageState.equals(Environment.MEDIA_MOUNTED)) {
+            packageFolder = new File(Environment.getExternalStorageDirectory() + "/LitoAR");
+            if (!packageFolder.exists()) {
+                packageFolder.mkdir();
+            }
+            if (packageFolder.exists() && packageFolder.isDirectory()) {
+                File[] packageDir = packageFolder.listFiles();
+
+                JSONObject samplePackage;
+
+                if (packageDir != null)
+                    for (int i = 0; i < packageDir.length; ++i) {
+                        //Log.e("FILE:", packageDir[i].getPath() + "/");
+                        try {
+                            samplePackage = parsePackage(packageDir[i].getPath() + "/package.json");
+
+                            JSONObject modelObject = (JSONObject) samplePackage.get("model");
+
+                            String objPath = packageDir[i].getPath() + modelObject.get("modelFile").toString();
+                            String objParentDir = packageDir[i].getPath() + "/model/";
+
+                            String arTAGName = samplePackage.get("sampleTAG").toString();
+                            String arTAGPath = packageDir[i].getPath() + samplePackage.get("sampleTAG").toString();
+
+                            //TODO: RENDER
+                            // id - Path - ParentPath
+                            //TODO: IMGDB
+                            // name - Path
+
+                            int DirSize = packageDir.length;
+                        } catch (JSONException e) {
+                            //TODO: Welp
+                            return false;
+                        }
+                    }
+            }
+        }
+        return true;
+    }
+
+    private JSONObject parsePackage(String JSONPath) throws JSONException {
+        File file = new File(JSONPath);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        try {
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                stringBuilder.append(line).append("\n");
+                line = bufferedReader.readLine();
+            }
+            bufferedReader.close();
+        } catch (IOException e) {
+            //TODO: Welp
+        }
+
+        String jsonString = stringBuilder.toString();
+
+        JSONObject jsonObject = new JSONObject(jsonString);
+
+        //Log.e("JSON", jsonObject.get("name").toString());
+
+        // TODO: Get nested properties
+//        JSONObject childObject = (JSONObject) jsonObject.get("model");
+//        Log.e("JSON", childObject.get("modelFile").toString());
+
+        return jsonObject;
     }
 
     private boolean setupAugmentedImageDatabase(Config config) {
@@ -520,14 +605,15 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         // * shorter setup time
         // * doesn't require images to be packaged in apk.
         if (useSingleImage) {
+            // LOAD FIRST
             Bitmap augmentedImageBitmap = loadAugmentedImageBitmap();
             if (augmentedImageBitmap == null) {
                 return false;
             }
 
             augmentedImageDatabase = new AugmentedImageDatabase(session);
-            augmentedImageDatabase.addImage("image_name", augmentedImageBitmap);
 
+            augmentedImageDatabase.addImage("image_name", augmentedImageBitmap);
             //TODO: ADD THE SECOND
             augmentedImageBitmap = loadSecondAugmentedImageBitmap();
             if (augmentedImageBitmap == null) {

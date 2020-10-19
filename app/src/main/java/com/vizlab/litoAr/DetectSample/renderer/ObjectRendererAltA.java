@@ -256,6 +256,7 @@ public class ObjectRendererAltA {
     ) throws IOException {
 
         String parentDirectory = OBJ_PATH.split("/")[0] + "/";
+
         // Read the obj file.
         InputStream objInputStream = context.getAssets().open(OBJ_PATH);
         mObj = ObjReader.read(objInputStream);
