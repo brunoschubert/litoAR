@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
@@ -59,7 +60,7 @@ import com.vizlab.litoAr.R;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class DetectSampleFragment extends Fragment implements GLSurfaceView.Renderer{
+public class DetectSampleFragment extends Fragment implements GLSurfaceView.Renderer {
     private static final String ERROR_TAG = DetectSampleFragment.class.getSimpleName();
 
     // Creates the Renderers and initialize once the GL surface is created.
@@ -95,6 +96,9 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     View view;
     ImageView actionBar;
     Button browseFiles;
+    TextView detectedImage;
+    int track;
+    int paus;
 
     //private static final String sampleAre = "arec/ARE.obj";
 
@@ -147,6 +151,9 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
         actionBar = view.findViewById(R.id.lower_action_bar);
         actionBar.setVisibility(View.GONE);
+
+        detectedImage = view.findViewById(R.id.detectedImage);
+        detectedImage.setVisibility(View.GONE);
 
         browseFiles = view.findViewById(R.id.btn_browse_files);
         browseFiles.setVisibility(View.GONE);
@@ -224,6 +231,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         //TODO: ImageView should be here?
         //fitToScanView.setVisibility(View.VISIBLE);
         actionBar.setVisibility(View.GONE);
+        detectedImage.setVisibility(View.GONE);
         browseFiles.setVisibility(View.GONE);
     }
 
@@ -253,7 +261,6 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //            getActivity().finish();
 //        }
 //    }
-
 
 
     // OPENGL OVERRIDEN METHODS ------------------------------------
@@ -295,7 +302,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         // the video background can be properly adjusted.
         displayRotationHelper.updateSessionIfNeeded(session);
 
-        try{
+        try {
             session.setCameraTextureName(backgroundRenderer.getTextureId());
 
             // Obtain the current frame from ARSession. When the configuration is set to
@@ -335,12 +342,17 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             Log.e(ERROR_TAG, "Exception on the OpenGL thread", t);
         }
     }
+
     // -------------------------------------------------------------
     // ARCore METHODS --------------------------------------------
     private void drawAugmentedImages(
-            Frame frame, float[] projmtx, float[] viewmtx, float[] colorCorrectionRgba, float lightIntensity){
+            Frame frame, float[] projmtx, float[] viewmtx, float[] colorCorrectionRgba, float lightIntensity) {
+
         Collection<AugmentedImage> updatedAugmentedImages =
                 frame.getUpdatedTrackables(AugmentedImage.class);
+
+        //TODO: Holds the Last tracked AImage.
+        AugmentedImage currentAugmentedImage;
 
         // Iterate to update augmentedImageMap, remove elements we cannot draw.
         for (AugmentedImage augmentedImage : updatedAugmentedImages) {
@@ -352,6 +364,14 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    Toast.makeText(getActivity(), message,
 //                            Toast.LENGTH_LONG).show();
                     Log.e("ERRORAR", message);
+//                    getActivity().runOnUiThread(
+//                            new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    detectedImage.setVisibility(View.VISIBLE);
+//                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
+//                                }
+//                            });
                     break;
 
                 case TRACKING:
@@ -364,20 +384,49 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                                     //TODO: Do we need this image view?
                                     //fitToScanView.setVisibility(View.GONE);
                                     actionBar.setVisibility(View.VISIBLE);
+
+//                                    detectedImage.setVisibility(View.VISIBLE);
+//                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
+
+                                    browseFiles.setVisibility(View.VISIBLE);
+//                                    if(augmentedImage.equals(augmentedImage)) {
+//                                        detectedImage.setText("Detected: " + augmentedImage.getIndex());
+////                                    }
+
                                     browseFiles.setOnClickListener(new View.OnClickListener() {
                                         public void onClick(View v) {
                                             //TODO: Show the Image name being Tracked on the UI
                                             // So that we know what to Load.
                                             Log.e("ID", "Augmented ID is: " + augmentedImage.getIndex() + " // Name is: + " + augmentedImage.getName());
-                                            Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, null);
+                                            if (augmentedImage.getIndex() == 0) {
+                                                Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, null);
+                                            }
+                                            if (augmentedImage.getIndex() == 1) {
+                                                Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_dummyFragment, null);
+                                            }
                                         }
                                     });
-                                    browseFiles.setVisibility(View.VISIBLE);
                                 }
                             });
 
                     // Create a new anchor for newly found images.
+                    if(augmentedImageMap.isEmpty()){
+                        // Add a new trackeable Anchor.
+                        Anchor centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.getCenterPose());
+                        augmentedImageMap.put(
+                                augmentedImage.getIndex(), Pair.create(augmentedImage, centerPoseAnchor));
+                    }
                     if (!augmentedImageMap.containsKey(augmentedImage.getIndex())) {
+                        // Stops tracking other images by destroying their Anchors and Removing from the map.
+                        // TODO: Check if this method won't work as comparison to get the Element on Screen
+                        // thus tracking more at once.
+                        Integer indexToRemove = (Integer) augmentedImageMap.keySet().toArray()[0];
+                        Anchor anchorToRemove =  augmentedImageMap.get(indexToRemove).second;
+                        // TODO: By detaching the Anchor is now STOPPED. How to retrack it?
+                        anchorToRemove.detach();
+                        augmentedImageMap.clear();
+
+                        // Add a new trackeable Anchor.
                         Anchor centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.getCenterPose());
                         augmentedImageMap.put(
                                 augmentedImage.getIndex(), Pair.create(augmentedImage, centerPoseAnchor));
@@ -417,12 +466,22 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    Pose anchorPose = centerAnchor.getPose();
 //                    anchorPose.toMatrix(anchorMatrix, 0);
 
+                    getActivity().runOnUiThread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                detectedImage.setVisibility(View.VISIBLE);
+                                detectedImage.setText("Detected: " + augmentedImage.getIndex());
+                            }
+                        });
+
                     centerAnchor.getPose().toMatrix(anchorMatrix, 0);
-                    if(augmentedImage.getIndex() == 0) {
+                    // TODO: if augmentedIndex EQUALS objectRendererIndex
+                    if (augmentedImage.getIndex() == 0) {
                         sampleAreRender.updateModelMatrix(anchorMatrix, 1f);
                         sampleAreRender.draw(viewmtx, projmtx, lightIntensity);
                     }
-                    if(augmentedImage.getIndex() == 1) {
+                    if (augmentedImage.getIndex() == 1) {
                         sampleCarbRender.updateModelMatrix(anchorMatrix, 1f);
                         sampleCarbRender.draw(viewmtx, projmtx, lightIntensity);
                     }

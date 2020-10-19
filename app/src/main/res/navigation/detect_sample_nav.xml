@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_detectSampleFragment_to_browseFilesFragment"
             app:destination="@id/browseFilesFragment" />
+        <action
+            android:id="@+id/action_detectSampleFragment_to_dummyFragment"
+            app:destination="@id/dummyFragment" />
     </fragment>
     <fragment
         android:id="@+id/browseFilesFragment"
@@ -28,4 +31,8 @@
             android:id="@+id/action_detectSamplePermissionsFragment_to_detectSampleFragment"
             app:destination="@id/detectSampleFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/dummyFragment"
+        android:name="com.vizlab.litoAr.DetectSample.ui.DummyFragment"
+        android:label="DummyFragment" />
 </navigation>

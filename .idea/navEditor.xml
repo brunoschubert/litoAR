@@ -52,12 +52,24 @@
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_detectSamplePermissionsFragment_to_detectSampleFragment2">
+                            <entry key="action_detectSamplePermissionsFragment_to_detectSampleFragment">
                               <value>
                                 <LayoutPositions />
                               </value>
                             </entry>
                           </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="dummyFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="633" />
+                            <option name="y" value="480" />
+                          </Point>
                         </option>
                       </LayoutPositions>
                     </value>
