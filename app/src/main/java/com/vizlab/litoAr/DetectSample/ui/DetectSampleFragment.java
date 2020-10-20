@@ -32,11 +32,18 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
+import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
+import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAltA;
+import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
+import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
+import com.vizlab.litoAr.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,15 +54,6 @@ import java.util.Map;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
-import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAltA;
-import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
-import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
-import com.vizlab.litoAr.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 //TODO: CODE CLEAN-UP
 // AugmentedImageRender
@@ -112,7 +110,11 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     ArrayList<String> tagPaths = new ArrayList<>();
     ArrayList<String> modelPaths = new ArrayList<>();
     ArrayList<String> modelParentPaths = new ArrayList<>();
+    ArrayList<String> sampleAssetsPath = new ArrayList<>();
     ArrayList<ObjectRendererAltA> renderableObjects = new ArrayList<>();
+    ArrayList<String> sampleName = new ArrayList<>();
+    ArrayList<String> sampleDescription = new ArrayList<>();
+    Bundle navigatorBundle = new Bundle();
 
     //private static final String sampleAre = "arec/ARE.obj";
 //    private static final String sampleAre = "Carbonatonew/Amostra_ara.obj";
@@ -252,6 +254,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             session.pause();
         }
     }
+
 
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
@@ -427,16 +430,24 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                                        detectedImage.setText("Detected: " + augmentedImage.getIndex());
 ////                                    }
 
+                                    // GETUP
                                     browseFiles.setOnClickListener(new View.OnClickListener() {
                                         public void onClick(View v) {
-                                            //TODO: Show the Image name being Tracked on the UI
-                                            // So that we know what to Load.
-                                            Log.e("ID", "Augmented ID is: " + augmentedImage.getIndex() + " // Name is: + " + augmentedImage.getName());
-                                            if (augmentedImage.getIndex() == 0) {
-                                                Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, null);
-                                            }
-                                            if (augmentedImage.getIndex() == 1) {
-                                                Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_dummyFragment, null);
+                                            //TODO: DATA [Name/Desc/Coord + ImgPath + DocPath]
+                                            // Show Name on Action Bar - Coord and Descrip bellow - Buttons for IMG and DOCs
+                                            // Recycler view - Launch new Activity for doc type.
+                                            // OnBackPressed goes back.
+                                            // OnBackPressed to Detection closes activity.
+                                            for (int i = 0; i < renderableObjects.size(); i++) {
+                                                if (renderableObjects.get(i).getId() == augmentedImage.getIndex()) {
+                                                    navigatorBundle.clear();
+
+                                                    navigatorBundle.putString("name", sampleName.get(i));
+                                                    navigatorBundle.putString("description", sampleDescription.get(i));
+                                                    navigatorBundle.putString("path", sampleAssetsPath.get(i));
+
+                                                    Navigation.findNavController(view).navigate(R.id.action_detectSampleFragment_to_browseFilesFragment, navigatorBundle);
+                                                }
                                             }
                                         }
                                     });
@@ -501,14 +512,14 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    Pose anchorPose = centerAnchor.getPose();
 //                    anchorPose.toMatrix(anchorMatrix, 0);
 
-                    getActivity().runOnUiThread(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    detectedImage.setVisibility(View.VISIBLE);
-                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
-                                }
-                            });
+//                    getActivity().runOnUiThread(
+//                            new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    detectedImage.setVisibility(View.VISIBLE);
+//                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
+//                                }
+//                            });
 
                     centerAnchor.getPose().toMatrix(anchorMatrix, 0);
                     // TODO: if augmentedIndex EQUALS objectRendererIndex
@@ -582,7 +593,6 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
                 if (packageDir != null)
                     for (int i = 0; i < packageDir.length; ++i) {
-                        //Log.e("FILE:", packageDir[i].getPath() + "/");
                         try {
                             samplePackage = parsePackage(packageDir[i].getPath() + "/package.json");
 
@@ -594,10 +604,23 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                             String tagName = samplePackage.get("sampleTAG").toString();
                             String tagPath = packageDir[i].getPath() + "/" + samplePackage.get("sampleTAG").toString();
 
+                            String name = samplePackage.get("name").toString();
+                            String description = samplePackage.get("description").toString();
+
                             //TODO: IMGDB
                             // name - Path
                             tagNames.add(tagName);
                             tagPaths.add(tagPath);
+
+                            //TODO: ASSETS
+                            // Doc - Path
+                            // Img - Path
+                            sampleName.add(name);
+                            sampleDescription.add(description);
+                            sampleAssetsPath.add(packageDir[i].getPath() + "/");
+                            Log.e("DOC", "Path:" + packageDir[i].getPath() + "/");
+                            Log.e("DOC", "Name:" + name);
+                            Log.e("DOC", "Description:" + description);
 
                             dirSize = packageDir.length;
                             //TODO: RENDER
