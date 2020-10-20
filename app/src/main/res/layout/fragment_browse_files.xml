@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DetectSample.ui.BrowseFilesFragment">
+    tools:context=".DetectSample.ui.BrowseFilesFragment"
+    android:background="@color/backgroundColor">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -24,7 +25,8 @@
             android:layout_marginStart="20dp"
             android:text="Sample Name"
             android:textColor="@android:color/white"
-            android:textSize="20dp" />
+            android:fontFamily="@font/montserrat"
+            android:textSize="22dp" />
 
     </androidx.appcompat.widget.Toolbar>
 
@@ -35,6 +37,9 @@
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:text="From Augmented Image!"
+        android:textColor="@android:color/white"
+        android:fontFamily="@font/montserrat"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -48,6 +53,8 @@
         android:text="From Augmented Image!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:fontFamily="@font/montserrat"
+        android:textColor="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="20dp"
