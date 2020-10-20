@@ -102,8 +102,10 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
     View view;
     ImageView actionBar;
+    ImageView overlay;
     Button browseFiles;
     TextView detectedImage;
+    String sampleDetected = "";
 
     int dirSize;
     ArrayList<String> tagNames = new ArrayList<>();
@@ -161,6 +163,9 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 
         detectedImage = view.findViewById(R.id.detectedImage);
         detectedImage.setVisibility(View.GONE);
+
+        overlay = view.findViewById(R.id.transparent_overlay);
+        overlay.setVisibility(View.GONE);
 
         browseFiles = view.findViewById(R.id.btn_browse_files);
         browseFiles.setVisibility(View.GONE);
@@ -239,6 +244,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         //fitToScanView.setVisibility(View.VISIBLE);
         actionBar.setVisibility(View.GONE);
         detectedImage.setVisibility(View.GONE);
+        overlay.setVisibility(View.GONE);
         browseFiles.setVisibility(View.GONE);
     }
 
@@ -401,14 +407,20 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
 //                    Toast.makeText(getActivity(), message,
 //                            Toast.LENGTH_LONG).show();
                     Log.e("ERRORAR", message);
-//                    getActivity().runOnUiThread(
-//                            new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    detectedImage.setVisibility(View.VISIBLE);
-//                                    detectedImage.setText("Detected: " + augmentedImage.getIndex());
-//                                }
-//                            });
+                    getActivity().runOnUiThread(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    overlay.setVisibility(View.VISIBLE);
+                                    detectedImage.setVisibility(View.VISIBLE);
+                                    for (int i = 0; i < renderableObjects.size(); i++) {
+                                        if (renderableObjects.get(i).getId() == augmentedImage.getIndex()) {
+                                            sampleDetected = sampleName.get(i);
+                                        }
+                                    }
+                                    detectedImage.setText("Detecting Sample: " + sampleDetected);
+                                }
+                            });
                     break;
 
                 case TRACKING:
