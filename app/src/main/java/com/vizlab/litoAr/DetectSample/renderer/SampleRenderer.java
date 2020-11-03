@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -51,8 +50,8 @@ import com.vizlab.litoAr.R;
 /**
  * Renders an object loaded from an OBJ file in OpenGL.
  */
-public class ObjectRendererAltA {
-    private static final String TAG = ObjectRendererAltA.class.getSimpleName();
+public class SampleRenderer {
+    private static final String TAG = SampleRenderer.class.getSimpleName();
 
     /**
      * Blend mode.
@@ -126,13 +125,13 @@ public class ObjectRendererAltA {
     private int id;
     private String parentPath;
 
-    public ObjectRendererAltA(String objPath, String parentPath, int id) {
+    public SampleRenderer(String objPath, String parentPath, int id) {
         OBJ_PATH = objPath;
         this.id = id;
         this.parentPath = parentPath;
     }
 
-    public ObjectRendererAltA(String objPath) {
+    public SampleRenderer(String objPath) {
         OBJ_PATH = objPath;
     }
 
@@ -171,7 +170,7 @@ public class ObjectRendererAltA {
 
         textureBitmap.recycle();
 
-        ShaderUtil.checkGLError(TAG, "Texture loading");
+        SampleShaderLoader.checkGLError(TAG, "Texture loading");
 
         // Read the obj file.
         InputStream objInputStream = context.getAssets().open(objAssetName);
@@ -230,11 +229,11 @@ public class ObjectRendererAltA {
                 GLES20.GL_ELEMENT_ARRAY_BUFFER, 2 * mIndexCount, indices, GLES20.GL_STATIC_DRAW);
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        ShaderUtil.checkGLError(TAG, "OBJ buffer load");
+        SampleShaderLoader.checkGLError(TAG, "OBJ buffer load");
 
-        final int vertexShader = ShaderUtil.loadGLShader(TAG, context,
+        final int vertexShader = SampleShaderLoader.loadGLShader(TAG, context,
                 GLES20.GL_VERTEX_SHADER, R.raw.object_vertex);
-        final int fragmentShader = ShaderUtil.loadGLShader(TAG, context,
+        final int fragmentShader = SampleShaderLoader.loadGLShader(TAG, context,
                 GLES20.GL_FRAGMENT_SHADER, R.raw.object_fragment);
 
         mProgram = GLES20.glCreateProgram();
@@ -243,7 +242,7 @@ public class ObjectRendererAltA {
         GLES20.glLinkProgram(mProgram);
         GLES20.glUseProgram(mProgram);
 
-        ShaderUtil.checkGLError(TAG, "Program creation");
+        SampleShaderLoader.checkGLError(TAG, "Program creation");
 
         mModelViewUniform = GLES20.glGetUniformLocation(mProgram, "u_ModelView");
         mModelViewProjectionUniform =
@@ -258,7 +257,7 @@ public class ObjectRendererAltA {
         mLightingParametersUniform = GLES20.glGetUniformLocation(mProgram, "u_LightingParameters");
         mMaterialParametersUniform = GLES20.glGetUniformLocation(mProgram, "u_MaterialParameters");
 
-        ShaderUtil.checkGLError(TAG, "Program parameters");
+        SampleShaderLoader.checkGLError(TAG, "Program parameters");
 
         Matrix.setIdentityM(mModelMatrix, 0);
     }
@@ -377,7 +376,7 @@ public class ObjectRendererAltA {
 
                 }
 
-                ShaderUtil.checkGLError(TAG, "Texture loading");
+                SampleShaderLoader.checkGLError(TAG, "Texture loading");
             }
 
             // Convert int indices to shorts for GL ES 2.0 compatibility
@@ -418,12 +417,12 @@ public class ObjectRendererAltA {
             GLES20.glBufferData(
                     GLES20.GL_ELEMENT_ARRAY_BUFFER, 2 * mIndexCount, indices, GLES20.GL_STATIC_DRAW);
 
-            ShaderUtil.checkGLError(TAG, "OBJ buffer load");
+            SampleShaderLoader.checkGLError(TAG, "OBJ buffer load");
 
             //Compile shaders
-            final int vertexShader = ShaderUtil.loadGLShader(TAG, context,
+            final int vertexShader = SampleShaderLoader.loadGLShader(TAG, context,
                     GLES20.GL_VERTEX_SHADER, R.raw.object_vertex);
-            final int fragmentShader = ShaderUtil.loadGLShader(TAG, context,
+            final int fragmentShader = SampleShaderLoader.loadGLShader(TAG, context,
                     GLES20.GL_FRAGMENT_SHADER, R.raw.object_fragment);
 
             mProgram = GLES20.glCreateProgram();
@@ -432,7 +431,7 @@ public class ObjectRendererAltA {
             GLES20.glLinkProgram(mProgram);
             GLES20.glUseProgram(mProgram);
 
-            ShaderUtil.checkGLError(TAG, "Program creation");
+            SampleShaderLoader.checkGLError(TAG, "Program creation");
 
             //Get handle of vertex attributes
             mPositionAttribute = GLES20.glGetAttribLocation(mProgram, "a_Position");
@@ -467,7 +466,7 @@ public class ObjectRendererAltA {
             mLightingParametersUniform = GLES20.glGetUniformLocation(mProgram, "u_LightingParameters");
             mMaterialParametersUniform = GLES20.glGetUniformLocation(mProgram, "u_MaterialParameters");
 
-            ShaderUtil.checkGLError(TAG, "Program parameters");
+            SampleShaderLoader.checkGLError(TAG, "Program parameters");
 
             Matrix.setIdentityM(mModelMatrix, 0);
         }
@@ -532,7 +531,7 @@ public class ObjectRendererAltA {
     public void draw(float[] cameraView, float[] cameraPerspective, float lightIntensity) {
 
         Log.e("PACK", "Render - onDraw: " + mObj.getNumMaterialGroups());
-        ShaderUtil.checkGLError(TAG, "Before draw");
+        SampleShaderLoader.checkGLError(TAG, "Before draw");
 
         // Build the ModelView and ModelViewProjection matrices
         // for calculating object position and light.
@@ -594,7 +593,7 @@ public class ObjectRendererAltA {
             GLES20.glDepthMask(true);
         }
 
-        ShaderUtil.checkGLError(TAG, "After draw");
+        SampleShaderLoader.checkGLError(TAG, "After draw");
     }
 
     public static void normalizeVec3(float[] v) {

@@ -36,7 +36,7 @@ public final class TrackingHelperUtils {
         switch (trackingState) {
             case PAUSED:
             case STOPPED:
-                activity.runOnUiThread(
+               activity.runOnUiThread(
                         () -> activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
                 break;
             case TRACKING:

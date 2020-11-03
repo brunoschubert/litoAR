@@ -4,7 +4,6 @@ import android.content.Context;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -98,9 +97,9 @@ public class BackgroundRenderer {
         // Load render camera feed shader.
         {
             int vertexShader =
-                    ShaderLoader.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, CAMERA_VERTEX_SHADER_NAME);
+                    BackgroundLoader.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, CAMERA_VERTEX_SHADER_NAME);
             int fragmentShader =
-                    ShaderLoader.loadGLShader(
+                    BackgroundLoader.loadGLShader(
                             TAG, context, GLES20.GL_FRAGMENT_SHADER, CAMERA_FRAGMENT_SHADER_NAME);
 
             cameraProgram = GLES20.glCreateProgram();
@@ -110,19 +109,19 @@ public class BackgroundRenderer {
             GLES20.glUseProgram(cameraProgram);
             cameraPositionAttrib = GLES20.glGetAttribLocation(cameraProgram, "a_Position");
             cameraTexCoordAttrib = GLES20.glGetAttribLocation(cameraProgram, "a_TexCoord");
-            ShaderLoader.checkGLError(TAG, "Program creation");
+            BackgroundLoader.checkGLError(TAG, "Program creation");
 
             cameraTextureUniform = GLES20.glGetUniformLocation(cameraProgram, "sTexture");
-            ShaderLoader.checkGLError(TAG, "Program parameters");
+            BackgroundLoader.checkGLError(TAG, "Program parameters");
         }
 
         // Load render depth map shader.
         {
             int vertexShader =
-                    ShaderLoader.loadGLShader(
+                    BackgroundLoader.loadGLShader(
                             TAG, context, GLES20.GL_VERTEX_SHADER, DEPTH_VISUALIZER_VERTEX_SHADER_NAME);
             int fragmentShader =
-                    ShaderLoader.loadGLShader(
+                    BackgroundLoader.loadGLShader(
                             TAG, context, GLES20.GL_FRAGMENT_SHADER, DEPTH_VISUALIZER_FRAGMENT_SHADER_NAME);
 
             depthProgram = GLES20.glCreateProgram();
@@ -132,10 +131,10 @@ public class BackgroundRenderer {
             GLES20.glUseProgram(depthProgram);
             depthPositionAttrib = GLES20.glGetAttribLocation(depthProgram, "a_Position");
             depthTexCoordAttrib = GLES20.glGetAttribLocation(depthProgram, "a_TexCoord");
-            ShaderLoader.checkGLError(TAG, "Program creation");
+            BackgroundLoader.checkGLError(TAG, "Program creation");
 
             depthTextureUniform = GLES20.glGetUniformLocation(depthProgram, "u_DepthTexture");
-            ShaderLoader.checkGLError(TAG, "Program parameters");
+            BackgroundLoader.checkGLError(TAG, "Program parameters");
         }
 
         this.depthTextureId = depthTextureId;
@@ -289,7 +288,7 @@ public class BackgroundRenderer {
         GLES20.glDepthMask(true);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
-        ShaderLoader.checkGLError(TAG, "BackgroundRendererDraw");
+        BackgroundLoader.checkGLError(TAG, "BackgroundRendererDraw");
     }
 
     /**

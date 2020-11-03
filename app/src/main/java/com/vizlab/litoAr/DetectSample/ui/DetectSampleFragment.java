@@ -33,8 +33,8 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.vizlab.litoAr.DetectSample.renderer.BackgroundRenderer;
-import com.vizlab.litoAr.DetectSample.renderer.ObjectRendererAltA;
-import com.vizlab.litoAr.DetectSample.utils.DisplayRotationUtils;
+import com.vizlab.litoAr.DetectSample.renderer.SampleRenderer;
+import com.vizlab.litoAr.DetectSample.utils.RotationUtils;
 import com.vizlab.litoAr.DetectSample.utils.TrackingHelperUtils;
 import com.vizlab.litoAr.R;
 
@@ -59,7 +59,7 @@ import javax.microedition.khronos.opengles.GL10;
 // AugmentedImageRender
 // ObjectRender
 // ObkectRenderAlt
-// - BGRender - ShaderLoader: stays as-is
+// - BGRender - BackgroundLoader: stays as-is
 
 /**
  * A simple {@link Fragment} subclass.
@@ -79,7 +79,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     //private final AugmentedImageRenderer augmentedImageRenderer = new AugmentedImageRenderer();
 
     // Tracks display rotation.
-    private DisplayRotationUtils displayRotationHelper;
+    private RotationUtils displayRotationHelper;
     // Provides the user suggested actions to better track the image.
     private final TrackingHelperUtils trackingStateHelper = new TrackingHelperUtils(getActivity());
 
@@ -113,7 +113,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     ArrayList<String> modelPaths = new ArrayList<>();
     ArrayList<String> modelParentPaths = new ArrayList<>();
     ArrayList<String> sampleAssetsPath = new ArrayList<>();
-    ArrayList<ObjectRendererAltA> renderableObjects = new ArrayList<>();
+    ArrayList<SampleRenderer> renderableObjects = new ArrayList<>();
     ArrayList<String> sampleName = new ArrayList<>();
     ArrayList<String> sampleDescription = new ArrayList<>();
     Bundle navigatorBundle = new Bundle();
@@ -127,8 +127,8 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     //private static final String sampleAre = "Lexus/lexus_hs.obj";
 
     //private final ObjectRendererAlt sampleAreRender = new ObjectRendererAlt(sampleAre);
-//    private final ObjectRendererAltA sampleAreRender = new ObjectRendererAltA(sampleAre);
-//    private final ObjectRendererAltA sampleCarbRender = new ObjectRendererAltA(sampleCarb);
+//    private final SampleRenderer sampleAreRender = new SampleRenderer(sampleAre);
+//    private final SampleRenderer sampleCarbRender = new SampleRenderer(sampleCarb);
 
     // Temporary matrix allocated here to reduce number of allocations for each frame.
     private final float[] anchorMatrix = new float[16];
@@ -145,7 +145,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
         view = inflater.inflate(R.layout.fragment_detect_sample, container, false);
 
         surfaceView = view.findViewById(R.id.GLSurfaceView);
-        displayRotationHelper = new DisplayRotationUtils(getActivity().getApplicationContext());
+        displayRotationHelper = new RotationUtils(getActivity().getApplicationContext());
 
         // Create and set up the renderer and render modes.
         surfaceView.setPreserveEGLContextOnPause(true);
@@ -585,7 +585,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
     private boolean readPackage() {
         //TODO: OBJ RENDER MTL TAKES: "E/OBJPATH: Carbonatonew/"
         // OBJ RENDER COULD TAKE OBJ PATH + MTL PATH
-        //public ObjectRendererAltA(String objPath, String Parent dir) {
+        //public SampleRenderer(String objPath, String Parent dir) {
         //        OBJ_PATH = objPath;
         //    }
 
@@ -690,7 +690,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
             augmentedImageDatabase = new AugmentedImageDatabase(session);
 
             Bitmap augmentedImageBitmap;
-            ObjectRendererAltA sampleRenderer;
+            SampleRenderer sampleRenderer;
             for (int i = 0; i < dirSize; ++i) {
                 augmentedImageBitmap = loadAugmentedImageBitmap(tagPaths.get(i));
                 if (augmentedImageBitmap == null) {
@@ -699,7 +699,7 @@ public class DetectSampleFragment extends Fragment implements GLSurfaceView.Rend
                 String tagName = tagNames.get(i).substring(0, tagNames.get(i).lastIndexOf('.'));
                 augmentedImageDatabase.addImage(tagName, augmentedImageBitmap);
 
-                sampleRenderer = new ObjectRendererAltA(modelPaths.get(i), modelParentPaths.get(i), i);
+                sampleRenderer = new SampleRenderer(modelPaths.get(i), modelParentPaths.get(i), i);
 
                 Log.e("PACK", "Setup DB - First Path: " + modelPaths.get(i));
                 renderableObjects.add(sampleRenderer);

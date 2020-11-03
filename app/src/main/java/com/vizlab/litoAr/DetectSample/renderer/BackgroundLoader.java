@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /** Shader helper functions. */
-public class ShaderLoader {
+public class BackgroundLoader {
     /**
      * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
      *
