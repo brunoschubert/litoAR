@@ -30,6 +30,9 @@
         <action
             android:id="@+id/action_detectSamplePermissionsFragment_to_detectSampleFragment"
             app:destination="@id/detectSampleFragment" />
+        <action
+            android:id="@+id/action_detectSamplePermissionsFragment_to_dummyFragment"
+            app:destination="@id/dummyFragment" />
     </fragment>
     <fragment
         android:id="@+id/dummyFragment"

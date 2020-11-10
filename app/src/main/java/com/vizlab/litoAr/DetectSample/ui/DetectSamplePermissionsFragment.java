@@ -61,7 +61,8 @@ public class DetectSamplePermissionsFragment extends Fragment {
                 (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
 
             // Navigates to the Sample Detector Fragment.
-            Navigation.findNavController(view).navigate(R.id.action_detectSamplePermissionsFragment_to_detectSampleFragment, null);
+            //Navigation.findNavController(view).navigate(R.id.action_detectSamplePermissionsFragment_to_detectSampleFragment, null);
+            Navigation.findNavController(view).navigate(R.id.action_detectSamplePermissionsFragment_to_dummyFragment, null);
         } else {
             // Requests Sample Collector permissions.
             requestPermissions(DETECT_SAMPLE_PERMISSIONS, DETECT_SAMPLE_PERMISSIONS_REQUEST_CODE);
